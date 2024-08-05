@@ -23,7 +23,7 @@ namespace GorillaComputer.Function
                 str.AppendLine(ComputerTool.IsPartyWithinCollider ? "Your group will travel with you." : "<color=red>You will leave your party unless you gather them here first!</color>").AppendLine();
             }
 
-            str.AppendLine(NetworkSystem.Instance.InRoom ? $"Players In Room: {NetworkSystem.Instance.RoomPlayerCount}" : $"Players Online: {NetworkSystem.Instance.GlobalPlayerCount()}").AppendLine();
+            str.AppendLine(NetworkSystem.Instance.InRoom ? $"Players In Room: {NetworkSystem.Instance.RoomPlayerCount} / {PhotonNetworkController.Instance.GetRoomSize(NetworkSystem.Instance.GameModeString)}" : $"Players Online: {NetworkSystem.Instance.GlobalPlayerCount()}").AppendLine();
 
             bool isSafeAccount = PlayFabAuthenticator.instance.GetSafety();
 
