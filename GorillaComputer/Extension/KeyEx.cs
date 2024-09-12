@@ -6,7 +6,7 @@ namespace GorillaComputer.Extension
     {
         public static bool IsNumberKey(this GorillaKeyboardBindings key)
         {
-            return key >= GorillaKeyboardBindings.zero && key <= GorillaKeyboardBindings.nine;
+            return key <= GorillaKeyboardBindings.nine;
         }
 
         public static bool IsFunctionKey(this GorillaKeyboardBindings key)

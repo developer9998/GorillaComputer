@@ -9,9 +9,9 @@ namespace GorillaComputer.Function
     internal class QueueFunction : ComputerFunction
     {
         public override string Name => "Queue";
-        public override string Description => "Use 'OPTION' keys to set an avaliable queue";
+        public override string Description => "Use 'OPTION' keys to set the avaliable queue";
 
-        public override string GetFunctionContent()
+        public override string GetFunctionText()
         {
             StringBuilder str = new();
 
@@ -47,7 +47,7 @@ namespace GorillaComputer.Function
                 default:
                     return;
             }
-            SetFunctionContent();
+            UpdateMonitor();
         }
     }
 }

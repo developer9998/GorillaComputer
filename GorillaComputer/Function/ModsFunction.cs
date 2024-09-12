@@ -31,7 +31,7 @@ namespace GorillaComputer.Function
             _plugins = plugins != null && plugins.Any() ? plugins.ToList() : null;
         }
 
-        public override string GetFunctionContent()
+        public override string GetFunctionText()
         {
             StringBuilder str = new();
 
@@ -68,21 +68,21 @@ namespace GorillaComputer.Function
                     if (_plugins.Any() && pageIndex > 0)
                     {
                         pageIndex--;
-                        SetFunctionContent();
+                        UpdateMonitor();
                     }
                     break;
                 case GorillaKeyboardBindings.S:
                     if (_plugins.Any() && pageIndex < _plugins.Count - 1)
                     {
                         pageIndex++;
-                        SetFunctionContent();
+                        UpdateMonitor();
                     }
                     break;
                 case GorillaKeyboardBindings.enter:
                     if (_plugins.Any())
                     {
                         _plugins.ElementAt(pageIndex).Instance.enabled ^= true;
-                        SetFunctionContent();
+                        UpdateMonitor();
                     }
                     break;
             }

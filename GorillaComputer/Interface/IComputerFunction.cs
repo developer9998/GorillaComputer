@@ -7,7 +7,7 @@ namespace GorillaComputer.Interface
         public string Name { get; }
         public string Description { get; }
         public bool IsParentalLocked { get; }
-        public string GetFunctionContent();
+        public string GetFunctionText();
         public void OnFunctionOpened();
         public void OnKeyPressed(GorillaKeyboardBindings key);
     }

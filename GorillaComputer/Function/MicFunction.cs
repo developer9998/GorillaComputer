@@ -12,7 +12,7 @@ namespace GorillaComputer.Function
 
         public override string Description => "Use 'OPTION' keys to select microphone usage";
 
-        public override string GetFunctionContent()
+        public override string GetFunctionText()
         {
             StringBuilder str = new();
 
@@ -34,15 +34,15 @@ namespace GorillaComputer.Function
             {
                 case GorillaKeyboardBindings.option1:
                     ComputerTool.PushToTalkType = ComputerTool.EPTTMode.AllChat;
-                    SetFunctionContent();
+                    UpdateMonitor();
                     break;
                 case GorillaKeyboardBindings.option2:
                     ComputerTool.PushToTalkType = ComputerTool.EPTTMode.PushToTalk;
-                    SetFunctionContent();
+                    UpdateMonitor();
                     break;
                 case GorillaKeyboardBindings.option3:
                     ComputerTool.PushToTalkType = ComputerTool.EPTTMode.PushToMute;
-                    SetFunctionContent();
+                    UpdateMonitor();
                     break;
             }
         }

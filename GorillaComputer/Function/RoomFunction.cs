@@ -3,7 +3,11 @@ using GorillaComputer.Model;
 using GorillaComputer.Tool;
 using GorillaNetworking;
 using GorillaTagScripts;
+using Photon.Pun;
 using System.Text;
+using System;
+using GorillaGameModes;
+using System.Linq;
 
 namespace GorillaComputer.Function
 {
@@ -14,7 +18,7 @@ namespace GorillaComputer.Function
 
         private string enteredRoomCode = "";
 
-        public override string GetFunctionContent()
+        public override string GetFunctionText()
         {
             StringBuilder str = new();
 
@@ -23,7 +27,7 @@ namespace GorillaComputer.Function
                 str.AppendLine(ComputerTool.IsPartyWithinCollider ? "Your group will travel with you." : "<color=red>You will leave your party unless you gather them here first!</color>").AppendLine();
             }
 
-            str.AppendLine(NetworkSystem.Instance.InRoom ? $"Players In Room: {NetworkSystem.Instance.RoomPlayerCount} / {PhotonNetworkController.Instance.GetRoomSize(NetworkSystem.Instance.GameModeString)}" : $"Players Online: {NetworkSystem.Instance.GlobalPlayerCount()}").AppendLine();
+            str.AppendLine(NetworkSystem.Instance.InRoom ? $"Players In Room: {NetworkSystem.Instance.RoomPlayerCount} / {PhotonNetworkController.Instance.GetRoomSize(NetworkSystem.Instance.GameModeString)}" : $"Players Online: {NetworkSystem.Instance.GlobalPlayerCount():n0}").AppendLine();
 
             bool isSafeAccount = PlayFabAuthenticator.instance.GetSafety();
 
@@ -44,9 +48,36 @@ namespace GorillaComputer.Function
 
             if (NetworkSystem.Instance.InRoom)
             {
-                str.AppendLine();
-
                 str.AppendLine($"Current Room: {NetworkSystem.Instance.RoomName}").AppendLine();
+
+                str.AppendLine($"Region: {PhotonNetwork.CloudRegion.Replace("/*", "").ToLower() switch
+                {
+                    // main regions
+                    "us" => "USA (East)",
+                    "usw" => "USA (West)",
+                    "eu" => "Europe",
+                    // other regions
+                    "asia" => "Asia",
+                    "au" => "Australia",
+                    "cae" => "Canada, East",
+                    "hk" => "Hong Kong",
+                    "in" => "India",
+                    "jp" => "Japan",
+                    "za" => "South Africa",
+                    "sa" => "South America",
+                    "kr" => "South Korea",
+                    "tr" => "Turkey",
+                    "uae" => "United Arab Emirates",
+                    "ussc" => "USA, South Central",
+                    null => "Unknown",
+                    _ => throw new ArgumentOutOfRangeException("CloudRegion")
+                }}").AppendLine();
+
+                string gameModeString = NetworkSystem.Instance.GameModeString;
+
+                string gameMode = GameMode.gameModeNames.FirstOrDefault(gameModeString.Contains);
+
+                str.AppendLine($"Game Mode: {gameMode?.ToLower()?.ToSentenceCase() ?? "None"}");
             }
 
             return str.ToString();
@@ -62,7 +93,7 @@ namespace GorillaComputer.Function
                         enteredRoomCode = enteredRoomCode[..^1];
                     }
 
-                    SetFunctionContent();
+                    UpdateMonitor();
 
                     break;
 
@@ -84,7 +115,7 @@ namespace GorillaComputer.Function
 
                     enteredRoomCode += key.GetKeyString();
 
-                    SetFunctionContent();
+                    UpdateMonitor();
 
                     break;
             }

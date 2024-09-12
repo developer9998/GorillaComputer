@@ -20,6 +20,6 @@ namespace GorillaComputer.Model
         /// </summary>
         Navigation =    1 << 1,
 
-        All = Primary | Navigation
+        All =           Primary | Navigation
     }
 }

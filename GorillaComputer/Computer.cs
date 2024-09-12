@@ -7,6 +7,7 @@ using Photon.Pun;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -23,13 +24,9 @@ namespace GorillaComputer
         public GameObject StartupMenu, MainMenu;
 
         public Text[] FunctionLineText;
-        public Text Main, Summary, FunctionArrows, FunctionPage, ModTitleHeader, TimeHeader, StartupTimeHeader, StartupDateHeader, StartupLabel, PingText;
+        public Text Main, Summary, FunctionArrows, FunctionPage, ModTitleHeader, TimeHeader, StartupTimeHeader, StartupDateHeader, StartupLabel;
 
-        public Image PingImage;
-
-        public Sprite Bar1, Bar2, Bar3, Bar4;
-
-        private float Ping;
+        private ComputerPingDisplay Ping;
 
         private bool isSafeAccount;
 
@@ -49,10 +46,12 @@ namespace GorillaComputer
             OnPopRequest?.Invoke();
         }
 
-        public async void Construct(ComputerAppearanceFlags appearance, bool startup)
+        public async void Construct(Sprite sprite, ComputerAppearanceFlags appearance, bool startup)
         {
             transform.Find("Model/Stand").gameObject.AddComponent<GorillaSurfaceOverride>().overrideIndex = 262;
+
             transform.Find("Model/Display").gameObject.AddComponent<GorillaSurfaceOverride>().overrideIndex = 262;
+
             transform.Find("Model/Screen").gameObject.AddComponent<GorillaSurfaceOverride>().overrideIndex = 260;
 
             static T GetGraphic<T>(GameObject menu, string name) where T : Graphic
@@ -61,12 +60,14 @@ namespace GorillaComputer
             }
 
             StartupMenu = transform.Find("Canvas/Startup Menu").gameObject;
+            StartupMenu.SetActive(false);
 
             StartupTimeHeader = StartupMenu.transform.Find("TimeHeader").GetComponent<Text>();
             StartupDateHeader = StartupMenu.transform.Find("DateHeader").GetComponent<Text>();
             StartupLabel = StartupMenu.transform.Find("MainText").GetComponent<Text>();
 
             MainMenu = transform.Find("Canvas/Main Menu").gameObject;
+            MainMenu.SetActive(false);
 
             FunctionLineText = [GetGraphic<Text>(MainMenu, "Function1"), GetGraphic<Text>(MainMenu, "Function2"), GetGraphic<Text>(MainMenu, "Function3"), GetGraphic<Text>(MainMenu, "Function4"), GetGraphic<Text>(MainMenu, "Function5"), GetGraphic<Text>(MainMenu, "Function6")];
 
@@ -75,18 +76,17 @@ namespace GorillaComputer
             FunctionArrows = MainMenu.transform.Find("FunctionArrow").GetComponent<Text>();
             FunctionPage = MainMenu.transform.Find("FunctionPageText").GetComponent<Text>();
             ModTitleHeader = MainMenu.transform.Find("ModTitleHeader").GetComponent<Text>();
+            ModTitleHeader.text = $"{Constants.Name} {Constants.Version}";
             TimeHeader = MainMenu.transform.Find("TimeHeader").GetComponent<Text>();
-            PingText = MainMenu.transform.Find("PingText").GetComponent<Text>();
-            PingImage = MainMenu.transform.Find("PingImage").GetComponent<Image>();
-            PingImage.enabled = false;
 
-            UpdateStartup(startup);
             UpdateAppearence(appearance);
 
-            Bar1 = await AssetTool.LoadAsset<Sprite>("Bar1");
-            Bar2 = await AssetTool.LoadAsset<Sprite>("Bar2");
-            Bar3 = await AssetTool.LoadAsset<Sprite>("Bar3");
-            Bar4 = await AssetTool.LoadAsset<Sprite>("Bar4");
+            UpdateWallpaper(sprite);
+
+            Ping = new ComputerPingDisplay();
+            await Ping.Initialize(GetGraphic<Text>(MainMenu, "PingText"), GetGraphic<Image>(MainMenu, "PingImage"));
+
+            UpdateStartup(startup);
 
             enabled = true;
         }
@@ -129,7 +129,7 @@ namespace GorillaComputer
 
             if (Time.realtimeSinceStartup > _lastAutoRefresh + 1f)
             {
-                UpdateContent(Database.CurrentFunction.GetFunctionContent());
+                UpdateContent(Database.CurrentFunction.GetFunctionText());
             }
 
             UpdateMainHeading();
@@ -141,49 +141,19 @@ namespace GorillaComputer
 
             TimeHeader.text = now.ToString("hh:mm tt");
 
-            int currentPing = PhotonTool.GetPing();
-            bool inRoom = PhotonNetwork.InRoom;
-
-            if (currentPing == -1 || !inRoom)
-            {
-                PingImage.enabled = false;
-                PingText.enabled = false;
-                Ping = 0;
-                return;
-            }
-
-            if (!PingImage.enabled)
-            {
-                PingImage.enabled = true;
-                PingText.enabled = true;
-            }
-
-            Ping = Mathf.MoveTowards(Ping, currentPing, 30f * Time.deltaTime);
-
-            PingText.text = Mathf.FloorToInt(Ping).ToString();
-
-            if (0 <= Ping && Ping <= 50)
-            {
-                PingImage.sprite = Bar4;
-            }
-            else if (50 <= Ping && Ping <= 60)
-            {
-                PingImage.sprite = Bar3;
-            }
-            else if (60 <= Ping && Ping <= 90)
-            {
-                PingImage.sprite = Bar2;
-            }
-            else if (90 <= Ping && Ping <= 120)
-            {
-                PingImage.sprite = Bar1;
-            }
+            Ping.Update();
         }
 
         public void UpdateStartup(bool startup)
         {
             UseStartupMenu = startup;
             ActivateMenuObjects(UseStartupMenu);
+        }
+
+        public void UpdateWallpaper(Sprite sprite)
+        {
+            if (sprite == null) return;
+            transform.Find("Canvas/Persistent Menu/Backdrop").GetComponent<Image>().sprite = sprite;
         }
 
         public void UpdateAppearence(ComputerAppearanceFlags appearance, string content = null)
@@ -216,7 +186,7 @@ namespace GorillaComputer
                 return;
             }
 
-            Main.text = content ?? Database.CurrentFunction.GetFunctionContent();
+            Main.text = content ?? Database.CurrentFunction.GetFunctionText();
             Summary.text = $"{Database.CurrentFunction.Name} - {Database.CurrentFunction.Description}";
         }
 
@@ -225,12 +195,16 @@ namespace GorillaComputer
             if (Database.FunctionOverride != null)
             {
                 FunctionLineText.ForEach(text => text.text = "");
+
                 FunctionPage.text = "";
+
                 FunctionArrows.enabled = false;
+
                 return;
             }
 
-            IEnumerable<string> functionNames = Database.FunctionRegistry.Select(function => function.Name).Skip(Mathf.FloorToInt(Database.CurrentFunctionIndex / (float)6) * 6).Take(6);
+            IEnumerable<string> functionNames = Database.FunctionRegistry.Select(function => function.Name).Skip(Mathf.FloorToInt(Database.CurrentFunctionIndex / (float)Constants.PageCapacity) * Constants.PageCapacity).Take(Constants.PageCapacity);
+
             int functionCount = functionNames.Count();
 
             int currentSelectionIndex = Database.CurrentFunctionIndex % Constants.PageCapacity;
@@ -271,7 +245,107 @@ namespace GorillaComputer
                 FunctionArrows.transform.localPosition = new Vector3(FunctionArrows.transform.localPosition.x, text.transform.localPosition.y + 0.55f, 0f);
             }
 
-            FunctionPage.text = $"Page {Mathf.FloorToInt(Database.CurrentFunctionIndex / (float)6) + 1}/{Mathf.CeilToInt(Database.FunctionRegistry.Count / (float)6)}";
+            FunctionPage.text = $"Page {Mathf.FloorToInt(Database.CurrentFunctionIndex / (float)Constants.PageCapacity) + 1}/{Mathf.CeilToInt(Database.FunctionRegistry.Count / (float)Constants.PageCapacity)}";
+        }
+
+        public class ComputerPingDisplay
+        {
+            public Text PingText;
+
+            public Image PingImage;
+
+            private float CurrentPing;
+
+            private Gradient PingGradient;
+
+            private Sprite LowBar, MediumBar, HighBar, UltraBar;
+
+            public async Task Initialize(Text pingText, Image pingImage)
+            {
+                if (pingText == null || pingImage == null) throw new ArgumentNullException();
+
+                PingText = pingText;
+                PingText.enabled = false;
+                PingImage = pingImage;
+                PingImage.enabled = false;
+
+                LowBar = await AssetTool.LoadAsset<Sprite>("Bar1");
+                MediumBar = await AssetTool.LoadAsset<Sprite>("Bar2");
+                HighBar = await AssetTool.LoadAsset<Sprite>("Bar3");
+                UltraBar = await AssetTool.LoadAsset<Sprite>("Bar4");
+
+                GradientColorKey[] colorKey = new GradientColorKey[4];
+                GradientAlphaKey[] alphaKey = new GradientAlphaKey[2];
+
+                colorKey[0].color = new Color(0f, 1f, 0f);
+                colorKey[0].time = 0f;
+
+                colorKey[1].color = new Color(0f, 1f, 0f);
+                colorKey[1].time = 0.4f;
+
+                colorKey[2].color = new Color(1f, 1f, 0f);
+                colorKey[2].time = 0.75f;
+
+                colorKey[3].color = new Color(1f, 0f, 0f);
+                colorKey[3].time = 1f;
+
+                alphaKey[0].alpha = 1f;
+                alphaKey[0].time = 0f;
+
+                alphaKey[1].alpha = 1f;
+                alphaKey[1].time = 1f;
+
+                PingGradient = new Gradient();
+                PingGradient.SetKeys(colorKey, alphaKey);
+            }
+
+            public void Update()
+            {
+                int currentPing = PhotonTool.GetPing();
+
+                bool inRoom = PhotonNetwork.InRoom;
+
+                if (currentPing == -1 || !inRoom)
+                {
+                    PingImage.enabled = false;
+
+                    PingText.enabled = false;
+
+                    CurrentPing = 0;
+
+                    return;
+                }
+
+                if (!PingImage.enabled)
+                {
+                    PingImage.enabled = true;
+
+                    PingText.enabled = true;
+                }
+
+                CurrentPing = Mathf.MoveTowards(CurrentPing, currentPing, 25f * Time.deltaTime);
+
+                PingText.text = Mathf.FloorToInt(CurrentPing).ToString();
+
+                PingImage.color = PingGradient.Evaluate(Mathf.Clamp01(CurrentPing / 110f));
+
+                if (0 <= CurrentPing && CurrentPing <= 50)
+                {
+                    PingImage.sprite = UltraBar;
+                }
+                else if (50 <= CurrentPing && CurrentPing <= 60)
+                {
+                    PingImage.sprite = HighBar;
+                }
+                else if (60 <= CurrentPing && CurrentPing <= 90)
+                {
+                    PingImage.sprite = MediumBar;
+                }
+                else if (90 <= CurrentPing && CurrentPing <= 120)
+                {
+                    PingImage.sprite = LowBar;
+                }
+            }
         }
     }
 }

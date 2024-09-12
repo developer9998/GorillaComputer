@@ -15,7 +15,7 @@ namespace GorillaComputer.Function
         public override string Description => "Use number keys to set map - Press 'ENTER' key to join map";
         public override bool IsParentalLocked => true;
 
-        public override string GetFunctionContent()
+        public override string GetFunctionText()
         {
             StringBuilder str = new();
 
@@ -80,7 +80,7 @@ namespace GorillaComputer.Function
                 }
 
                 ComputerTool.SetGroupMap(map.ToUpper(), number);
-                SetFunctionContent();
+                UpdateMonitor();
             }
         }
     }

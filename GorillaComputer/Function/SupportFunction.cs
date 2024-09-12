@@ -19,7 +19,7 @@ namespace GorillaComputer.Function
             displaySupport = false;
         }
 
-        public override string GetFunctionContent()
+        public override string GetFunctionText()
         {
             StringBuilder str = new();
 
@@ -40,7 +40,7 @@ namespace GorillaComputer.Function
             if (key == GorillaKeyboardBindings.enter)
             {
                 displaySupport = true;
-                SetFunctionContent();
+                UpdateMonitor();
             }
         }
     }

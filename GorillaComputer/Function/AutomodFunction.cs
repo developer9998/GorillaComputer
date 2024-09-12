@@ -11,7 +11,7 @@ namespace GorillaComputer.Function
         public override string Description => "Use 'OPTION' keys to select the automod level";
         public override bool IsParentalLocked => true;
 
-        public override string GetFunctionContent()
+        public override string GetFunctionText()
         {
             StringBuilder str = new();
 
@@ -28,15 +28,15 @@ namespace GorillaComputer.Function
             {
                 case GorillaKeyboardBindings.option1:
                     ComputerTool.AutoMute = ComputerTool.EAutomodMode.Aggressive;
-                    SetFunctionContent();
+                    UpdateMonitor();
                     break;
                 case GorillaKeyboardBindings.option2:
                     ComputerTool.AutoMute = ComputerTool.EAutomodMode.Moderate;
-                    SetFunctionContent();
+                    UpdateMonitor();
                     break;
                 case GorillaKeyboardBindings.option3:
                     ComputerTool.AutoMute = ComputerTool.EAutomodMode.Off;
-                    SetFunctionContent();
+                    UpdateMonitor();
                     break;
             }
         }

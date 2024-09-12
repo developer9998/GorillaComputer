@@ -18,7 +18,7 @@ namespace GorillaComputer.Function
             enteredNickName = ComputerTool.Name;
         }
 
-        public override string GetFunctionContent()
+        public override string GetFunctionText()
         {
             StringBuilder str = new();
 
@@ -38,14 +38,14 @@ namespace GorillaComputer.Function
                         enteredNickName = enteredNickName[..^1];
                     }
 
-                    SetFunctionContent();
+                    UpdateMonitor();
 
                     break;
 
                 case GorillaKeyboardBindings.enter:
                     ComputerTool.Name = enteredNickName;
 
-                    SetFunctionContent();
+                    UpdateMonitor();
 
                     break;
 
@@ -59,7 +59,7 @@ namespace GorillaComputer.Function
 
                     enteredNickName += key.GetKeyString();
 
-                    SetFunctionContent();
+                    UpdateMonitor();
 
                     break;
             }

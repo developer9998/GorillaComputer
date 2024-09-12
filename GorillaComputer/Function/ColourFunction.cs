@@ -14,7 +14,7 @@ namespace GorillaComputer.Function
 
         private int cursorLine;
 
-        public override string GetFunctionContent()
+        public override string GetFunctionText()
         {
             Color playerColour = ComputerTool.Colour;
 
@@ -35,17 +35,17 @@ namespace GorillaComputer.Function
             {
                 case GorillaKeyboardBindings.option1:
                     cursorLine = 0;
-                    SetFunctionContent();
+                    UpdateMonitor();
                     break;
 
                 case GorillaKeyboardBindings.option2:
                     cursorLine = 1;
-                    SetFunctionContent();
+                    UpdateMonitor();
                     break;
 
                 case GorillaKeyboardBindings.option3:
                     cursorLine = 2;
-                    SetFunctionContent();
+                    UpdateMonitor();
                     break;
 
                 default:
@@ -67,7 +67,7 @@ namespace GorillaComputer.Function
                         }
 
                         ComputerTool.Colour = playerColour;
-                        SetFunctionContent();
+                        UpdateMonitor();
                     }
                     break;
             }

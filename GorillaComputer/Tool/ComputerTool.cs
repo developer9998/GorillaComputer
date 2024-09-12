@@ -53,7 +53,7 @@ namespace GorillaComputer.Tool
         {
             if (NetworkSystem.Instance.InRoom)
             {
-                GorillaTagger.Instance.myVRRig.RPC("InitializeNoobMaterial", RpcTarget.All, colour.r, colour.g, colour.b);
+                GorillaTagger.Instance.myVRRig.SendRPC("RPC_InitializeNoobMaterial", RpcTarget.All, colour.r, colour.g, colour.b);
             }
         }
 
@@ -352,7 +352,7 @@ namespace GorillaComputer.Tool
                 {
                     {
                         "Player ID",
-                        PlayFabAuthenticator.instance._playFabPlayerIdCache
+                        PlayFabAuthenticator.instance.GetPlayFabPlayerId()
                     },
                     {
                         "Platform",

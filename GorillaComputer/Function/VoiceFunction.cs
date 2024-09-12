@@ -8,14 +8,16 @@ namespace GorillaComputer.Function
     internal class VoiceFunction : ComputerFunction
     {
         public override string Name => "Voice";
-        public override string Description => "Use 'OPTION' keys to set voice type (HUMAN / MONKE)";
+        public override string Description => "Press 'OPTION' key to toggle the voice type";
         public override bool IsParentalLocked => true;
 
-        public override string GetFunctionContent()
+        public override string GetFunctionText()
         {
             StringBuilder str = new();
 
-            str.AppendLine($"Voice Type '{(ComputerTool.UseVoiceChat ? "HUMAN" : "MONKE")}'");
+            str.AppendLine("Voice will change how you hear others and how they hear you").AppendLine();
+
+            str.AppendLine($"Current Voice Type: {(ComputerTool.UseVoiceChat ? "Human" : "Monke")}");
 
             return str.ToString();
         }
@@ -24,13 +26,9 @@ namespace GorillaComputer.Function
         {
             switch (key)
             {
-                case GorillaKeyboardBindings.option1:
-                    ComputerTool.UseVoiceChat = true;
-                    SetFunctionContent();
-                    break;
-                case GorillaKeyboardBindings.option2:
-                    ComputerTool.UseVoiceChat = false;
-                    SetFunctionContent();
+                case GorillaKeyboardBindings.enter:
+                    ComputerTool.UseVoiceChat ^= true;
+                    UpdateMonitor();
                     break;
             }
         }

@@ -12,7 +12,7 @@ namespace GorillaComputer.Function
 
         public override string Description => "Use 'OPTION' keys to set mode - Use number keys to set speed";
 
-        public override string GetFunctionContent()
+        public override string GetFunctionText()
         {
             StringBuilder str = new();
 
@@ -29,24 +29,24 @@ namespace GorillaComputer.Function
             {
                 case GorillaKeyboardBindings.option1:
                     ComputerTool.TurnType = ComputerTool.ETurnMode.Snap;
-                    SetFunctionContent();
+                    UpdateMonitor();
                     break;
 
                 case GorillaKeyboardBindings.option2:
                     ComputerTool.TurnType = ComputerTool.ETurnMode.Smooth;
-                    SetFunctionContent();
+                    UpdateMonitor();
                     break;
 
                 case GorillaKeyboardBindings.option3:
                     ComputerTool.TurnType = ComputerTool.ETurnMode.None;
-                    SetFunctionContent();
+                    UpdateMonitor();
                     break;
 
                 default:
                     if (key.TryParseNumber(out int number))
                     {
                         ComputerTool.TurnValue = number;
-                        SetFunctionContent();
+                        UpdateMonitor();
                     }
                     break;
             }

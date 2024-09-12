@@ -15,6 +15,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using System;
 using System.Reflection;
+using System.IO;
 
 namespace GorillaComputer
 {
@@ -25,14 +26,17 @@ namespace GorillaComputer
         public int CurrentFunctionIndex { get; set; }
         public LazyFunctionOverride FunctionOverride { get; set; }
 
-        public bool InStartupMenu = true;
+        private bool InStartupMenu = true;
 
-        public Computer CurrentComputer => ComputerStack != null && ComputerStack.Count > 0 && ComputerStack.TryPeek(out Computer component) ? component : null;
-        public Stack<Computer> ComputerStack = [];
+        private Computer CurrentComputer => ComputerStack != null && ComputerStack.Count > 0 && ComputerStack.TryPeek(out Computer component) ? component : null;
+
+        private Stack<Computer> ComputerStack = [];
+
+        private Sprite Wallpaper;
 
         private AudioClip genericClick, functionClick;
 
-        public Dictionary<string, ComputerSceneLocation> ComputerLocationDict = new()
+        private Dictionary<string, ComputerSceneLocation> ComputerLocationDict = new()
         {
             {
                 "GorillaTag",
@@ -114,6 +118,35 @@ namespace GorillaComputer
 
             await Task.Delay(100);
 
+            LazyWarningPatch.CurrentFailureMessage.AddCallback(OnFailureRecieved);
+            OnFailureRecieved(LazyWarningPatch.CurrentFailureMessage.value);
+
+            #region Keyboard
+
+            Key.OnKeyClicked = PressButton;
+
+            genericClick = await AssetTool.LoadAsset<AudioClip>("Click");
+            functionClick = await AssetTool.LoadAsset<AudioClip>("ClickLarge");
+
+            #endregion
+
+            #region Computer
+
+            InitializeComputer(SceneManager.GetActiveScene(), ComputerLocationDict["GorillaTag"]);
+
+            SceneManager.sceneLoaded += async delegate (Scene scene, LoadSceneMode loadMode)
+            {
+                if (ComputerLocationDict.TryGetValue(scene.name, out ComputerSceneLocation location) && loadMode == LoadSceneMode.Additive)
+                {
+                    await Task.Delay(100); // small delay seems needed
+                    InitializeComputer(scene, location);
+                }
+            };
+
+            #endregion
+
+            #region Function
+
             FunctionRegistry = [];
             CurrentFunction = null;
             FunctionOverride = null;
@@ -140,43 +173,42 @@ namespace GorillaComputer
             {
                 try
                 {
-                    LogTool.Info($"Searching assembly {assembly.FullName}");
+                    LogTool.Info($"Searching assembly {assembly.GetName().Name}");
 
                     var functionTypes = assembly.GetTypes().Where(page => page.GetCustomAttribute<AutoRegisterAttribute>() != null).ToArray();
                     if (functionTypes != null && functionTypes.Any())
                     {
-                        functionTypes.ForEach(function =>
+                        foreach(var function in functionTypes)
                         {
-                            LogTool.Info($"Adding function of type {function.FullName}");
+                            try
+                            {
+                                LogTool.Info($"Adding function of type {function.FullName}");
 
-                            ComputerFunction computerFunction = Activator.CreateInstance(function) as ComputerFunction ?? throw new InvalidCastException();
-                            AddFunction(computerFunction);
-                        });
+                                ComputerFunction computerFunction = Activator.CreateInstance(function) as ComputerFunction ?? throw new InvalidCastException();
+                                AddFunction(computerFunction);
+                            }
+                            catch(Exception ex)
+                            {
+                                LogTool.Error($"Error when adding function of type {function.FullName}: {ex}");
+                            }
+                        }
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
-                    LogTool.Error($"Error when adding functions from assembly {assembly.FullName}: {ex}");
+                    LogTool.Error($"Error when searching assembly {assembly.GetName().Name}: {ex}");
                 }
             });
 
-            LazyWarningPatch.CurrentFailureMessage.AddCallback(OnFailureRecieved);
-            OnFailureRecieved(LazyWarningPatch.CurrentFailureMessage.value);
+            #endregion
 
-            genericClick = await AssetTool.LoadAsset<AudioClip>("Click");
-            functionClick = await AssetTool.LoadAsset<AudioClip>("ClickLarge");
-            Key.OnKeyClicked = PressButton;
+            #region Wallpaper
 
-            InitializeComputer(SceneManager.GetActiveScene(), ComputerLocationDict["GorillaTag"]);
+            var wallpaperTex = await AssetTool.GetWallpaperTexture();
 
-            SceneManager.sceneLoaded += async delegate (Scene scene, LoadSceneMode loadMode)
-            {
-                if (ComputerLocationDict.TryGetValue(scene.name, out ComputerSceneLocation location) && loadMode == LoadSceneMode.Additive)
-                {
-                    await Task.Delay(100); // small delay seems needed
-                    InitializeComputer(scene, location);
-                }
-            };
+            Wallpaper = Sprite.Create(wallpaperTex, new Rect(0, 0, wallpaperTex.width, wallpaperTex.height), Vector2.zero);
+
+            #endregion
 
             enabled = true;
             ComputerTool.Computer.enabled = false;
@@ -198,7 +230,7 @@ namespace GorillaComputer
 
             FunctionRegistry.Add(function);
 
-            ComputerFunction.RequestSetContent += delegate (ComputerFunction currentFunction, string content)
+            ComputerFunction.RequestUpdateMonitor += delegate (ComputerFunction currentFunction, string content)
             {
                 if (currentFunction == function && CurrentFunction == function)
                 {
@@ -227,6 +259,12 @@ namespace GorillaComputer
 
         public void PressButton(Key pressedKey, bool isLeftHand)
         {
+            if (!enabled)
+            {
+                LogTool.Warning("PressButton attempt while mod has not initialized");
+                return;
+            }
+
             var handPlayer = isLeftHand ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
 
             handPlayer.PlayOneShot(pressedKey.ClickSound, 0.8f);
@@ -316,12 +354,14 @@ namespace GorillaComputer
 
                     CurrentComputer.enabled = true;
 
+                    CurrentComputer.UpdateWallpaper(Wallpaper);
+
                     CurrentComputer.UpdateAppearence(ComputerAppearanceFlags.All);
 
                     CurrentComputer.UpdateStartup(InStartupMenu);
                 }
             };
-            component.Construct(InStartupMenu ? ComputerAppearanceFlags.None : ComputerAppearanceFlags.All, InStartupMenu);
+            component.Construct(Wallpaper, InStartupMenu ? ComputerAppearanceFlags.None : ComputerAppearanceFlags.All, InStartupMenu);
 
             gct.myFunctionText?.gameObject?.SetActive(false);
             gct.myScreenText?.gameObject?.SetActive(false);

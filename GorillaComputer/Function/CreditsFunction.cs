@@ -12,7 +12,7 @@ namespace GorillaComputer.Function
         public override string Name => "Credits";
         public override string Description => "Use 'W' & 'S' to switch credit pages";
 
-        public override string GetFunctionContent()
+        public override string GetFunctionText()
         {
             StringBuilder str = new();
 
@@ -40,13 +40,13 @@ namespace GorillaComputer.Function
             if (key == GorillaKeyboardBindings.W)
             {
                 ComputerTool.CreditCurrentPage--;
-                SetFunctionContent();
+                UpdateMonitor();
             }
 
             if (key == GorillaKeyboardBindings.S)
             {
                 ComputerTool.CreditCurrentPage++;
-                SetFunctionContent();
+                UpdateMonitor();
             }
         }
     }

@@ -38,6 +38,9 @@
     <Reference Include="clipper_library">
       <HintPath>$(GameAssemblyPath)\clipper_library.dll</HintPath>
     </Reference>
+    <Reference Include="Fusion.Runtime">
+      <HintPath>$(GameAssemblyPath)\Fusion.Runtime.dll</HintPath>
+    </Reference>
     <Reference Include="Mono.Security">
       <HintPath>$(GameAssemblyPath)\Mono.Security.dll</HintPath>
     </Reference>
@@ -286,9 +289,6 @@
     </Reference>
     <Reference Include="UnityEngine.XRModule">
       <HintPath>$(GameAssemblyPath)\UnityEngine.XRModule.dll</HintPath>
-    </Reference>
-    <Reference Include="Utilla">
-      <HintPath>$(PluginsPath)\Utilla\Utilla.dll</HintPath>
     </Reference>
     <Reference Include="websocket-sharp">
       <HintPath>$(GameAssemblyPath)\websocket-sharp.dll</HintPath>

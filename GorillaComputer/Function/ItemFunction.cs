@@ -12,7 +12,7 @@ namespace GorillaComputer.Function
         public override string Name => "Items";
         public override string Description => "Use 'ENTER' key to toggle particles - Use number keys to set instrument volume";
 
-        public override string GetFunctionContent()
+        public override string GetFunctionText()
         {
             StringBuilder str = new();
 
@@ -28,14 +28,14 @@ namespace GorillaComputer.Function
             if (key == GorillaKeyboardBindings.enter)
             {
                 ComputerTool.ItemParticles ^= true;
-                SetFunctionContent();
+                UpdateMonitor();
                 return;
             }
 
             if (key.TryParseNumber(out int number))
             {
                 ComputerTool.InstrumentVolume = number / 50f;
-                SetFunctionContent();
+                UpdateMonitor();
             }
         }
     }

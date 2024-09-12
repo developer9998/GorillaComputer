@@ -6,13 +6,15 @@ namespace GorillaComputer.Model
 {
     public abstract class ComputerFunction : IComputerFunction
     {
-        public static event Action<ComputerFunction, string> RequestSetContent;
+        public static event Action<ComputerFunction, string> RequestUpdateMonitor;
 
         public abstract string Name { get; }
+
         public abstract string Description { get; }
+
         public virtual bool IsParentalLocked { get; } = false;
 
-        public abstract string GetFunctionContent();
+        public abstract string GetFunctionText();
 
         public virtual void OnFunctionOpened()
         {
@@ -24,14 +26,14 @@ namespace GorillaComputer.Model
 
         }
 
-        public void SetFunctionContent()
+        public void UpdateMonitor()
         {
-            SetFunctionContent(GetFunctionContent());
+            UpdateMonitor(GetFunctionText());
         }
 
-        public void SetFunctionContent(string content)
+        public void UpdateMonitor(string content)
         {
-            RequestSetContent?.Invoke(this, content);
+            RequestUpdateMonitor?.Invoke(this, content);
         }
     }
 }
