@@ -116,12 +116,18 @@ namespace GorillaComputer
         {
             enabled = false;
 
+            LogTool.Info("Initializing computer");
+
             await Task.Delay(100);
+
+            LogTool.Info("Setup failure");
 
             LazyWarningPatch.CurrentFailureMessage.AddCallback(OnFailureRecieved);
             OnFailureRecieved(LazyWarningPatch.CurrentFailureMessage.value);
 
             #region Keyboard
+
+            LogTool.Info("Keyboard");
 
             Key.OnKeyClicked = PressButton;
 
@@ -132,10 +138,14 @@ namespace GorillaComputer
 
             #region Computer
 
+            LogTool.Info("Computer");
+
             InitializeComputer(SceneManager.GetActiveScene(), ComputerLocationDict["GorillaTag"]);
 
             SceneManager.sceneLoaded += async delegate (Scene scene, LoadSceneMode loadMode)
             {
+                LogTool.Info("Scene loaded");
+
                 if (ComputerLocationDict.TryGetValue(scene.name, out ComputerSceneLocation location) && loadMode == LoadSceneMode.Additive)
                 {
                     await Task.Delay(100); // small delay seems needed
@@ -146,6 +156,8 @@ namespace GorillaComputer
             #endregion
 
             #region Function
+
+            LogTool.Info("Function");
 
             FunctionRegistry = [];
             CurrentFunction = null;
@@ -166,6 +178,8 @@ namespace GorillaComputer
             AddFunction(new SupportFunction());
 
             AddFunction(new ModsFunction());
+
+            LogTool.Info("Assemblies");
 
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
@@ -204,11 +218,15 @@ namespace GorillaComputer
 
             #region Wallpaper
 
+            LogTool.Info("Wallpaper");
+
             var wallpaperTex = await AssetTool.GetWallpaperTexture();
 
             Wallpaper = Sprite.Create(wallpaperTex, new Rect(0, 0, wallpaperTex.width, wallpaperTex.height), Vector2.zero);
 
             #endregion
+
+            LogTool.Info("Initialize complete");
 
             enabled = true;
             ComputerTool.Computer.enabled = false;
