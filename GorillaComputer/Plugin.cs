@@ -10,7 +10,7 @@ namespace GorillaComputer
     {
         public void Awake()
         {
-            LogTool.Logger = Logger;
+            Logging.Logger = Logger;
             GorillaTagger.OnPlayerSpawned(Initialize);
             Harmony.CreateAndPatchAll(GetType().Assembly, Constants.GUID);
         }

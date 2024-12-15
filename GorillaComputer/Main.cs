@@ -116,35 +116,35 @@ namespace GorillaComputer
         {
             enabled = false;
 
-            LogTool.Info("Initializing computer");
+            Logging.Info("Initializing computer");
 
             await Task.Delay(100);
 
-            LogTool.Info("Setup failure");
+            Logging.Info("Setup failure");
 
             LazyWarningPatch.CurrentFailureMessage.AddCallback(OnFailureRecieved);
             OnFailureRecieved(LazyWarningPatch.CurrentFailureMessage.value);
 
             #region Keyboard
 
-            LogTool.Info("Keyboard");
+            Logging.Info("Keyboard");
 
             Key.OnKeyClicked = PressButton;
 
-            genericClick = await AssetTool.LoadAsset<AudioClip>("Click");
-            functionClick = await AssetTool.LoadAsset<AudioClip>("ClickLarge");
+            genericClick = await AssetLoader.LoadAsset<AudioClip>("Click");
+            functionClick = await AssetLoader.LoadAsset<AudioClip>("ClickLarge");
 
             #endregion
 
             #region Computer
 
-            LogTool.Info("Computer");
+            Logging.Info("Computer");
 
             InitializeComputer(SceneManager.GetActiveScene(), ComputerLocationDict["GorillaTag"]);
 
             SceneManager.sceneLoaded += async delegate (Scene scene, LoadSceneMode loadMode)
             {
-                LogTool.Info("Scene loaded");
+                Logging.Info("Scene loaded");
 
                 if (ComputerLocationDict.TryGetValue(scene.name, out ComputerSceneLocation location) && loadMode == LoadSceneMode.Additive)
                 {
@@ -157,7 +157,7 @@ namespace GorillaComputer
 
             #region Function
 
-            LogTool.Info("Function");
+            Logging.Info("Function");
 
             FunctionRegistry = [];
             CurrentFunction = null;
@@ -179,7 +179,7 @@ namespace GorillaComputer
 
             AddFunction(new ModsFunction());
 
-            LogTool.Info("Assemblies");
+            Logging.Info("Assemblies");
 
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
@@ -187,7 +187,7 @@ namespace GorillaComputer
             {
                 try
                 {
-                    LogTool.Info($"Searching assembly {assembly.GetName().Name}");
+                    Logging.Info($"Searching assembly {assembly.GetName().Name}");
 
                     var functionTypes = assembly.GetTypes().Where(page => page.GetCustomAttribute<AutoRegisterAttribute>() != null).ToArray();
                     if (functionTypes != null && functionTypes.Any())
@@ -196,21 +196,21 @@ namespace GorillaComputer
                         {
                             try
                             {
-                                LogTool.Info($"Adding function of type {function.FullName}");
+                                Logging.Info($"Adding function of type {function.FullName}");
 
                                 ComputerFunction computerFunction = Activator.CreateInstance(function) as ComputerFunction ?? throw new InvalidCastException();
                                 AddFunction(computerFunction);
                             }
                             catch(Exception ex)
                             {
-                                LogTool.Error($"Error when adding function of type {function.FullName}: {ex}");
+                                Logging.Error($"Error when adding function of type {function.FullName}: {ex}");
                             }
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    LogTool.Error($"Error when searching assembly {assembly.GetName().Name}: {ex}");
+                    Logging.Error($"Error when searching assembly {assembly.GetName().Name}: {ex}");
                 }
             });
 
@@ -218,15 +218,15 @@ namespace GorillaComputer
 
             #region Wallpaper
 
-            LogTool.Info("Wallpaper");
+            Logging.Info("Wallpaper");
 
-            var wallpaperTex = await AssetTool.GetWallpaperTexture();
+            var wallpaperTex = await AssetLoader.GetWallpaperTexture();
 
             Wallpaper = Sprite.Create(wallpaperTex, new Rect(0, 0, wallpaperTex.width, wallpaperTex.height), Vector2.zero);
 
             #endregion
 
-            LogTool.Info("Initialize complete");
+            Logging.Info("Initialize complete");
 
             enabled = true;
             ComputerTool.Computer.enabled = false;
@@ -236,13 +236,13 @@ namespace GorillaComputer
         {
             if (function.IsParentalLocked && PlayFabAuthenticator.instance.GetSafety())
             {
-                LogTool.Warning($"Function {function.GetType().Name} cannot be registered with parental lock");
+                Logging.Warning($"Function {function.GetType().Name} cannot be registered with parental lock");
                 return;
             }
 
             if (FunctionRegistry.Contains(function))
             {
-                LogTool.Warning($"Function {function.GetType().Name} is already included in GorillaComputer registry");
+                Logging.Warning($"Function {function.GetType().Name} is already included in GorillaComputer registry");
                 return;
             }
 
@@ -263,14 +263,14 @@ namespace GorillaComputer
 
             if (function == null)
             {
-                LogTool.Error($"Function in registry at position {index} is not allocated for and cannot be set to");
+                Logging.Error($"Function in registry at position {index} is not allocated for and cannot be set to");
                 return;
             }
 
             CurrentFunction = function;
             CurrentFunctionIndex = index;
 
-            LogTool.Info($"Current function is set to {CurrentFunction.Name} of type {CurrentFunction.GetType().Name}");
+            Logging.Info($"Current function is set to {CurrentFunction.Name} of type {CurrentFunction.GetType().Name}");
 
             function.OnFunctionOpened();
         }
@@ -279,7 +279,7 @@ namespace GorillaComputer
         {
             if (!enabled)
             {
-                LogTool.Warning("PressButton attempt while mod has not initialized");
+                Logging.Warning("PressButton attempt while mod has not initialized");
                 return;
             }
 
@@ -328,7 +328,7 @@ namespace GorillaComputer
 
             if (baseComputer == null && !location.UseFallbackMethod)
             {
-                LogTool.Warning($"Computer {location.ComputerName} for scene {scene.name} could not be found, the fallback method is not permitted");
+                Logging.Warning($"Computer {location.ComputerName} for scene {scene.name} could not be found, the fallback method is not permitted");
                 return;
             }
 
@@ -337,14 +337,14 @@ namespace GorillaComputer
 
             if (baseComputer == null || !baseComputer.TryGetComponent(out GorillaComputerTerminal gct))
             {
-                LogTool.Warning($"Computer {location.ComputerName} for scene {scene.name} could not be found, the fallback method was permitted and {(isUsingFallback ? "was" : "wasn't")} in use");
+                Logging.Warning($"Computer {location.ComputerName} for scene {scene.name} could not be found, the fallback method was permitted and {(isUsingFallback ? "was" : "wasn't")} in use");
                 return;
             }
 
             Transform computerUI = gct.transform.Find("ComputerUI");
             Transform computerTerminalScreen = computerUI ? computerUI.Find("monitor") : gct.monitorMesh.transform;
 
-            GameObject monitor = Instantiate(await AssetTool.LoadAsset<GameObject>("Monitor"));
+            GameObject monitor = Instantiate(await AssetLoader.LoadAsset<GameObject>("Monitor"));
             monitor.name = location.ComputerName;
 
             Transform transform = monitor.transform;
@@ -409,7 +409,7 @@ namespace GorillaComputer
         {
             if (buttonParent == null)
             {
-                LogTool.Error($"Computer {location.ComputerName} has a null keyboard that cannot be initialized");
+                Logging.Error($"Computer {location.ComputerName} has a null keyboard that cannot be initialized");
                 return;
             }
 
@@ -419,7 +419,7 @@ namespace GorillaComputer
 
             if (keyboardButtons == null || keyboardButtons.Length == 0)
             {
-                LogTool.Error($"Computer {location.ComputerName} has no keys to replace");
+                Logging.Error($"Computer {location.ComputerName} has no keys to replace");
                 return;
             }
 
@@ -438,7 +438,7 @@ namespace GorillaComputer
 
             failMessage = failMessage.ToSentenceCase().Replace("steam", "Steam").Replace("gorilla tag", "Gorilla Tag");
 
-            LogTool.Warning($"howdy: {failMessage}");
+            Logging.Warning($"howdy: {failMessage}");
 
             FunctionOverride = new LazyFunctionOverride()
             {

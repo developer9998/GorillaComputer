@@ -69,7 +69,8 @@ namespace GorillaComputer.Tool
 
                 NetworkSystem.Instance.SetMyNickName(value);
 
-                Computer.offlineVRRigNametagText.text = value;
+                GorillaTagger.Instance.offlineVRRig.playerText1.text = value;
+                GorillaTagger.Instance.offlineVRRig.playerText2.text = value;
                 Computer.savedName = value;
                 Computer.currentName = value;
 

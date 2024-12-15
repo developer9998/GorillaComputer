@@ -2,7 +2,7 @@
 
 namespace GorillaComputer.Tool
 {
-    internal static class LogTool
+    internal static class Logging
     {
         public static ManualLogSource Logger;
 

@@ -8,7 +8,7 @@ using Object = UnityEngine.Object;
 
 namespace GorillaComputer.Tool
 {
-    internal static class AssetTool
+    internal static class AssetLoader
     {
         public static string WallpaperPath => Path.Combine(Path.GetDirectoryName(typeof(Plugin).Assembly.Location), "Wallpaper.png");
 
@@ -75,7 +75,7 @@ namespace GorillaComputer.Tool
 
             if (fileRequest.result != UnityWebRequest.Result.Success)
             {
-                LogTool.Error($"Wallpaper could not be loaded with result {fileRequest.result}");
+                Logging.Error($"Wallpaper could not be loaded with result {fileRequest.result}");
                 return null;
             }
 

@@ -221,7 +221,7 @@ namespace GorillaComputer
 
                 if (text == null)
                 {
-                    LogTool.Warning($"Function text at position {i} is null");
+                    Logging.Warning($"Function text at position {i} is null");
                     continue;
                 }
 
@@ -269,10 +269,10 @@ namespace GorillaComputer
                 PingImage = pingImage;
                 PingImage.enabled = false;
 
-                LowBar = await AssetTool.LoadAsset<Sprite>("Bar1");
-                MediumBar = await AssetTool.LoadAsset<Sprite>("Bar2");
-                HighBar = await AssetTool.LoadAsset<Sprite>("Bar3");
-                UltraBar = await AssetTool.LoadAsset<Sprite>("Bar4");
+                LowBar = await AssetLoader.LoadAsset<Sprite>("Bar1");
+                MediumBar = await AssetLoader.LoadAsset<Sprite>("Bar2");
+                HighBar = await AssetLoader.LoadAsset<Sprite>("Bar3");
+                UltraBar = await AssetLoader.LoadAsset<Sprite>("Bar4");
 
                 GradientColorKey[] colorKey = new GradientColorKey[4];
                 GradientAlphaKey[] alphaKey = new GradientAlphaKey[2];
