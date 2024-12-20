@@ -1,9 +1,9 @@
 ﻿using HarmonyLib;
 
-namespace GorillaComputer.Patch
+namespace GorillaComputer.Patches
 {
     [HarmonyPatch(typeof(GorillaNetworking.GorillaComputer), "GeneralFailureMessage")]
-    public class LazyWarningPatch
+    public class FailureMessagePatch
     {
         public static Watchable<string> CurrentFailureMessage = new("");
 

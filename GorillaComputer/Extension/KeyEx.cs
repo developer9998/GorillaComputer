@@ -1,38 +1,19 @@
-﻿using GorillaNetworking;
+﻿using GorillaComputer.Models;
 
 namespace GorillaComputer.Extension
 {
     public static class KeyEx
     {
-        public static bool IsNumberKey(this GorillaKeyboardBindings key)
+        public static bool IsNumericKey(this KeyBinding key) => key <= KeyBinding.nine;
+
+        public static bool IsFunctionKey(this KeyBinding key) => key >= KeyBinding.up && key <= KeyBinding.option3;
+
+        public static bool TryParseNumber(this KeyBinding key, out int number)
         {
-            return key <= GorillaKeyboardBindings.nine;
+            number = IsNumericKey(key) ? (int)key : -1;
+            return number != -1;
         }
 
-        public static bool IsFunctionKey(this GorillaKeyboardBindings key)
-        {
-            return key >= GorillaKeyboardBindings.up && key <= GorillaKeyboardBindings.option3;
-        }
-
-        public static bool TryParseNumber(this GorillaKeyboardBindings key, out int number)
-        {
-            number = 0;
-
-            if (!IsNumberKey(key)) return false;
-
-            number = (int)key;
-
-            return true;
-        }
-
-        public static string GetKeyString(this GorillaKeyboardBindings key)
-        {
-            if (key.TryParseNumber(out int number))
-            {
-                return number.ToString();
-            }
-
-            return key.ToString();
-        }
+        public static string GetKeyString(this KeyBinding key) => key.TryParseNumber(out int number) ? number.ToString() : key.ToString();
     }
 }

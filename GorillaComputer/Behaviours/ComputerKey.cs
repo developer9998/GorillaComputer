@@ -1,13 +1,16 @@
-﻿using GorillaNetworking;
+﻿using GorillaComputer.Models;
+using GorillaNetworking;
 using System;
 using UnityEngine;
 
-namespace GorillaComputer
+namespace GorillaComputer.Behaviours
 {
     [DisallowMultipleComponent]
-    internal class Key : MonoBehaviour
+    internal class ComputerKey : MonoBehaviour
     {
-        public static Action<Key, bool> OnKeyClicked;
+        public Computer Computer;
+
+        public static Action<ComputerKey, bool> OnKeyClicked;
 
         private const float Debounce = 0.1f;
 
@@ -15,15 +18,15 @@ namespace GorillaComputer
 
         private const float ColliderBump = 9f / 8f;
 
-        public GorillaKeyboardBindings Binding;
+        public KeyBinding Binding;
 
         public AudioClip ClickSound;
 
-        private MeshRenderer renderer;
+        private MeshRenderer Renderer => GetComponent<MeshRenderer>();
 
-        private BoxCollider collider;
+        private BoxCollider Collider => GetComponent<BoxCollider>();
 
-        private Vector3 colliderCentre;
+        private Vector3 centre;
 
         private Vector3 localPosition;
 
@@ -31,26 +34,25 @@ namespace GorillaComputer
 
         public void Awake()
         {
-            GorillaKeyboardButton keyButton = gameObject.GetComponent<GorillaKeyboardButton>();
-            Binding = keyButton.Binding;
-            Destroy(keyButton);
+            if (TryGetComponent(out GorillaKeyboardButton button))
+            {
+                Binding = (KeyBinding)Enum.Parse(typeof(KeyBinding), button.Binding.ToString());
+                Destroy(button);
+            }
 
             gameObject.layer = (int)UnityLayer.GorillaInteractable;
 
-            renderer = GetComponent<MeshRenderer>();
-            renderer.material.color = Color.white;
+            Renderer.material.color = Color.white;
 
-            collider = GetComponent<BoxCollider>();
-            collider.isTrigger = true;
-
-            colliderCentre = collider.center;
+            Collider.isTrigger = true;
+            centre = Collider.center;
 
             localPosition = transform.localPosition;
         }
 
         public void OnTriggerEnter(Collider collider)
         {
-            if (Time.realtimeSinceStartup > (_clickTime + Debounce) && collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component))
+            if (Time.realtimeSinceStartup > _clickTime + Debounce && collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component))
             {
                 _clickTime = Time.realtimeSinceStartup;
 
@@ -74,15 +76,15 @@ namespace GorillaComputer
         {
             if (isBumped)
             {
-                renderer.material.color = new Color(0.715f, 0.7f, 0.7f);
-                transform.localPosition = localPosition - (Vector3.up * KeyBump);
-                collider.center = colliderCentre - (Vector3.forward * KeyBump / ColliderBump);
+                Renderer.material.color = new Color(0.715f, 0.7f, 0.7f);
+                transform.localPosition = localPosition - Vector3.up * KeyBump;
+                Collider.center = centre - Vector3.forward * KeyBump / ColliderBump;
             }
             else
             {
-                renderer.material.color = Color.white;
+                Renderer.material.color = Color.white;
                 transform.localPosition = localPosition;
-                collider.center = colliderCentre;
+                Collider.center = centre;
             }
         }
     }

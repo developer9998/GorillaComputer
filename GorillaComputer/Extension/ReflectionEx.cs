@@ -5,7 +5,7 @@ namespace GorillaComputer.Extension
 {
     internal static class ReflectionEx
     {
-        public static FieldInfo GetField(this object obj, string fieldName) 
+        public static FieldInfo GetField(this object obj, string fieldName)
         {
             return AccessTools.Field(obj.GetType(), fieldName);
         }

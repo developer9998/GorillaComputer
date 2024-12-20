@@ -8,6 +8,8 @@
 
         public const string Version = "1.0.0";
 
+        public const bool DebugLogExclusive = false;
+
         public const int PageCapacity = 6;
     }
 }

@@ -1,30 +1,37 @@
-﻿using GorillaComputer.Extension;
-using GorillaComputer.Model;
-using GorillaComputer.Tool;
+﻿using GorillaComputer.Behaviours;
+using GorillaComputer.Extension;
+using GorillaComputer.Models;
+using GorillaComputer.Utilities;
+using GorillaGameModes;
 using GorillaNetworking;
 using GorillaTagScripts;
 using Photon.Pun;
-using System.Text;
 using System;
-using GorillaGameModes;
 using System.Linq;
+using System.Text;
 
-namespace GorillaComputer.Function
+namespace GorillaComputer.Screens
 {
-    internal class RoomFunction : ComputerFunction
+    internal class RoomScreen : ComputerScreen
     {
-        public override string Name => "Room";
-        public override string Description => "Press 'ENTER' to join a room code - Press 'OPTION 1' to leave the current room";
+        public override string Title => "Room";
+        public override string Summary => NetworkSystem.Instance.InRoom ? "Press [ENTER] to join room\nPress [OPTION 1] to leave current room" : "Press [ENTER] to join room";
 
-        private string enteredRoomCode = "";
+        public void Awake()
+        {
+            NetworkSystem.Instance.OnMultiplayerStarted += UpdateScreen;
+            NetworkSystem.Instance.OnReturnedToSinglePlayer += UpdateScreen;
+            NetworkSystem.Instance.OnPlayerJoined += (player) => UpdateScreen();
+            NetworkSystem.Instance.OnPlayerLeft += (player) => UpdateScreen();
+        }
 
-        public override string GetFunctionText()
+        public override string GetContent()
         {
             StringBuilder str = new();
 
             if (FriendshipGroupDetection.Instance.IsInParty)
             {
-                str.AppendLine(ComputerTool.IsPartyWithinCollider ? "Your group will travel with you." : "<color=red>You will leave your party unless you gather them here first!</color>").AppendLine();
+                str.AppendLine(ComputerUtils.IsPartyWithinCollider ? "Your group will travel with you." : "<color=red>You will leave your party unless you gather them here first!</color>").AppendLine();
             }
 
             str.AppendLine(NetworkSystem.Instance.InRoom ? $"Players In Room: {NetworkSystem.Instance.RoomPlayerCount} / {PhotonNetworkController.Instance.GetRoomSize(NetworkSystem.Instance.GameModeString)}" : $"Players Online: {NetworkSystem.Instance.GlobalPlayerCount():n0}").AppendLine();
@@ -33,7 +40,9 @@ namespace GorillaComputer.Function
 
             if (!isSafeAccount)
             {
-                str.AppendLine($"Room Code: {enteredRoomCode}").AppendLine();
+                var roomToJoin = ComputerUtils.Computer.roomToJoin;
+
+                str.AppendLine($"Room Code: {roomToJoin}").AppendLine();
 
                 if (GorillaNetworking.GorillaComputer.instance.roomFull)
                 {
@@ -83,40 +92,34 @@ namespace GorillaComputer.Function
             return str.ToString();
         }
 
-        public override void OnKeyPressed(GorillaKeyboardBindings key)
+        public override void ProcessScreen(KeyBinding key)
         {
+            var roomToJoin = ComputerUtils.Computer.roomToJoin;
+
             switch (key)
             {
-                case GorillaKeyboardBindings.delete:
-                    if (enteredRoomCode.Length > 0)
+                case KeyBinding.delete:
+                    if (roomToJoin.Length > 0)
                     {
-                        enteredRoomCode = enteredRoomCode[..^1];
+                        roomToJoin = roomToJoin[..^1];
                     }
-
-                    UpdateMonitor();
-
+                    ComputerUtils.Computer.roomToJoin = roomToJoin;
+                    UpdateScreen();
                     break;
 
-                case GorillaKeyboardBindings.enter:
-                    ComputerTool.JoinRoom(enteredRoomCode);
+                case KeyBinding.enter:
+                    ComputerUtils.JoinRoom(roomToJoin);
                     break;
 
-                case GorillaKeyboardBindings.option1:
-                    ComputerTool.LeaveRoom();
-                    break;
-
-                case GorillaKeyboardBindings.option2:
-
-                case GorillaKeyboardBindings.option3:
+                case KeyBinding.option1:
+                    ComputerUtils.LeaveRoom();
                     break;
 
                 default:
-                    if (enteredRoomCode.Length >= 10) return;
-
-                    enteredRoomCode += key.GetKeyString();
-
-                    UpdateMonitor();
-
+                    if (key.IsFunctionKey() || roomToJoin.Length >= 10) return;
+                    roomToJoin += key.GetKeyString();
+                    ComputerUtils.Computer.roomToJoin = roomToJoin;
+                    UpdateScreen();
                     break;
             }
         }

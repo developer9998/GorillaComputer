@@ -1,22 +1,27 @@
 ﻿using BepInEx.Logging;
 
-namespace GorillaComputer.Tool
+namespace GorillaComputer.Tools
 {
     internal static class Logging
     {
-        public static ManualLogSource Logger;
+        public static void Info(object message) => LogMessage(LogLevel.Info, message);
 
-        public static void Info(object data) => Log(data, LogLevel.Info);
+        public static void Warning(object message) => LogMessage(LogLevel.Warning, message);
 
-        public static void Warning(object data) => Log(data, LogLevel.Warning);
+        public static void Error(object message) => LogMessage(LogLevel.Error, message);
 
-        public static void Error(object data) => Log(data, LogLevel.Error);
+        public static void Fatal(object message) => LogMessage(LogLevel.Fatal, message);
 
-        private static void Log(object data, LogLevel level = LogLevel.Info)
+        public static void LogMessage(LogLevel level, object message)
         {
+            bool debug = false;
 #if DEBUG
-            Logger.Log(level, data);
+            debug = true;
 #endif
+            if (!Constants.DebugLogExclusive || debug)
+            {
+                Plugin.TiedLogger.Log(level, message);
+            }
         }
     }
 }

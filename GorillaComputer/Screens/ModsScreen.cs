@@ -1,37 +1,38 @@
 ﻿using BepInEx;
 using BepInEx.Bootstrap;
-using GorillaComputer.Model;
-using GorillaNetworking;
+using GorillaComputer.Behaviours;
+using GorillaComputer.Models;
 using HarmonyLib;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace GorillaComputer.Function
+namespace GorillaComputer.Screens
 {
-    internal class ModsFunction : ComputerFunction
+    internal class ModsScreen : ComputerScreen
     {
-        public override string Name => "Mods";
-        public override string Description => "Use 'W' & 'S' to navigate mods - Press 'ENTER' to toggle selected mod";
+        public override string Title => "Mods";
+        public override string Summary => "Use [W/S] to navigate mods\nPress [ENTER] to toggle mod";
 
         private List<PluginInfo> _plugins;
 
-        private int pageCapacity = 10;
+        private const int pageCapacity = 10;
 
         private int pageIndex = 0;
 
-        public ModsFunction()
+        public void Awake()
         {
-            var plugins = Chainloader.PluginInfos.Values.Where(pi =>
+            var plugins = Chainloader.PluginInfos.Values.Where(pluginInfo =>
             {
-                var methods = AccessTools.GetMethodNames(pi.Instance);
+                var methods = AccessTools.GetMethodNames(pluginInfo.Instance);
                 return methods.Contains("OnEnable") && methods.Contains("OnDisable");
             });
+
             _plugins = plugins != null && plugins.Any() ? plugins.ToList() : null;
         }
 
-        public override string GetFunctionText()
+        public override string GetContent()
         {
             StringBuilder str = new();
 
@@ -46,7 +47,7 @@ namespace GorillaComputer.Function
 
             int selectedPluginIndex = pageIndex % pageCapacity;
 
-            for(int i = 0; i < pageCapacity; i++)
+            for (int i = 0; i < pageCapacity; i++)
             {
                 var plugin = plugins.ElementAtOrDefault(i);
 
@@ -60,30 +61,33 @@ namespace GorillaComputer.Function
             return str.ToString();
         }
 
-        public override void OnKeyPressed(GorillaKeyboardBindings key)
+        public override void ProcessScreen(KeyBinding key)
         {
             switch (key)
             {
-                case GorillaKeyboardBindings.W:
+                case KeyBinding.W:
                     if (_plugins.Any() && pageIndex > 0)
                     {
                         pageIndex--;
-                        UpdateMonitor();
+                        UpdateScreen();
                     }
+
                     break;
-                case GorillaKeyboardBindings.S:
+                case KeyBinding.S:
                     if (_plugins.Any() && pageIndex < _plugins.Count - 1)
                     {
                         pageIndex++;
-                        UpdateMonitor();
+                        UpdateScreen();
                     }
+
                     break;
-                case GorillaKeyboardBindings.enter:
+                case KeyBinding.enter:
                     if (_plugins.Any())
                     {
                         _plugins.ElementAt(pageIndex).Instance.enabled ^= true;
-                        UpdateMonitor();
+                        UpdateScreen();
                     }
+
                     break;
             }
         }

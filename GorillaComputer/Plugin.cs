@@ -1,5 +1,6 @@
 ﻿using BepInEx;
-using GorillaComputer.Tool;
+using BepInEx.Logging;
+using GorillaComputer.Behaviours;
 using HarmonyLib;
 using UnityEngine;
 
@@ -8,16 +9,14 @@ namespace GorillaComputer
     [BepInPlugin(Constants.GUID, Constants.Name, Constants.Version)]
     internal class Plugin : BaseUnityPlugin
     {
+        public static ManualLogSource TiedLogger;
+
         public void Awake()
         {
-            Logging.Logger = Logger;
-            GorillaTagger.OnPlayerSpawned(Initialize);
-            Harmony.CreateAndPatchAll(GetType().Assembly, Constants.GUID);
-        }
+            TiedLogger = Logger;
 
-        public void Initialize()
-        {
-            new GameObject($"{Constants.Name} ({Constants.GUID})").AddComponent<Main>();
+            GorillaTagger.OnPlayerSpawned(() => new GameObject(typeof(Main).FullName).AddComponent<Main>());
+            Harmony.CreateAndPatchAll(GetType().Assembly, Constants.GUID);
         }
     }
 }

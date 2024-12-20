@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using GorillaComputer.Utilities;
+using GorillaNetworking;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,7 +8,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Object = UnityEngine.Object;
 
-namespace GorillaComputer.Tool
+namespace GorillaComputer.Tools
 {
     internal static class AssetLoader
     {
@@ -24,7 +26,7 @@ namespace GorillaComputer.Tool
             var bundleLoadRequest = AssetBundle.LoadFromStreamAsync(stream);
 
             // AssetBundleCreateRequest is a YieldInstruction !!
-            await YieldTaskTool.YieldInstructionAsync(bundleLoadRequest);
+            await YieldUtils.YieldInstructionAsync(bundleLoadRequest);
 
             _storedBundle = bundleLoadRequest.assetBundle;
             _bundleLoaded = true;
@@ -43,10 +45,10 @@ namespace GorillaComputer.Tool
             var assetLoadRequest = _storedBundle.LoadAssetAsync<T>(name);
 
             // AssetBundleRequest is a YieldInstruction !!
-            await YieldTaskTool.YieldInstructionAsync(assetLoadRequest);
+            await YieldUtils.YieldInstructionAsync(assetLoadRequest);
 
             var asset = assetLoadRequest.asset as T;
-            _assetCache.Add(name, asset);
+            _assetCache.AddOrUpdate(name, asset);
             return asset;
         }
 
@@ -64,14 +66,14 @@ namespace GorillaComputer.Tool
 
                 wallpaperTex.Apply();
 
-                File.WriteAllBytes(WallpaperPath, wallpaperTex.EncodeToPNG());
+                await File.WriteAllBytesAsync(WallpaperPath, wallpaperTex.EncodeToPNG());
 
-                return null;
+                return wallpaperTex;
             }
 
             UnityWebRequest fileRequest = UnityWebRequest.Get(WallpaperPath);
 
-            await YieldTaskTool.YieldWebRequestAsync(fileRequest);
+            await YieldUtils.YieldWebRequestAsync(fileRequest);
 
             if (fileRequest.result != UnityWebRequest.Result.Success)
             {

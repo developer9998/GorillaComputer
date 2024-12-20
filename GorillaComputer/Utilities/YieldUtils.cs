@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace GorillaComputer.Tool
+namespace GorillaComputer.Utilities
 {
-    internal static class YieldTaskTool
+    internal static class YieldUtils
     {
         public static async Task YieldWebRequestAsync(UnityWebRequest webRequest)
         {
