@@ -10,6 +10,6 @@
 
         public const bool DebugLogExclusive = false;
 
-        public const int PageCapacity = 6;
+        public const int PageCapacity = 8;
     }
 }
