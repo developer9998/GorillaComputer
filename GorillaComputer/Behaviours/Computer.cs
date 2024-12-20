@@ -12,9 +12,9 @@ using UnityEngine.UI;
 
 namespace GorillaComputer.Behaviours
 {
-    internal class Computer : MonoBehaviour
+    internal class Computer : GorillaSliceableSimple
     {
-        public bool UseStartupMenu = true;
+        // public bool UseStartupMenu = true;
 
         public Action OnPopRequest = null;
 
@@ -35,6 +35,12 @@ namespace GorillaComputer.Behaviours
         {
             enabled = false;
             isSafeAccount = PlayFabAuthenticator.instance.GetSafety();
+        }
+
+        public override void OnEnable()
+        {
+            step = GorillaSlicerSimpleManager.UpdateStep.Update;
+            base.OnEnable();
         }
 
         public void OnDestroy()
@@ -114,11 +120,11 @@ namespace GorillaComputer.Behaviours
             enabled = true;
         }
 
-        public void Update()
+        public override void SliceUpdate()
         {
             if (GTAppState.isQuitting) return;
 
-            if (UseStartupMenu)
+            if (Singleton<Main>.Instance.InStartupMenu)
             {
                 UpdateStartupMenu();
             }
@@ -170,8 +176,8 @@ namespace GorillaComputer.Behaviours
         {
             Logging.Info($"RevealStartup ({startup})");
 
-            UseStartupMenu = startup;
-            ActivateMenuObjects(UseStartupMenu);
+            Singleton<Main>.Instance.InStartupMenu = startup;
+            ActivateMenuObjects(startup);
         }
 
         public void UpdateWallpaper(Sprite sprite)
