@@ -6,9 +6,9 @@
 
         public const string Name = "GorillaComputer";
 
-        public const string Version = "1.0.0";
+        public const string Version = "1.0.0.0";
 
-        public const bool DebugLogExclusive = false;
+        public const bool DebugLogExclusive = true;
 
         public const int PageCapacity = 8;
     }

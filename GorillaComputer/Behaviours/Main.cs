@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace GorillaComputer.Behaviours
 {
@@ -91,40 +92,44 @@ namespace GorillaComputer.Behaviours
                 typeof(TurnScreen),
                 typeof(QueueScreen),
                 typeof(TroopScreen),
-
                 typeof(GroupScreen),
                 typeof(VoiceScreen),
+
                 typeof(AutomodScreen),
                 typeof(ItemScreen),
                 typeof(RedeemScreen),
                 typeof(CredtsScreen),
-
                 typeof(SupportScreen),
                 typeof(ModsScreen)
             };
 
             builtinScreens.ForEach(RegisterScreen);
 
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-
-            assemblies.Where(assembly => assembly != null && assembly.GetCustomAttribute<ComputerScannableAttribute>() != null).ForEach(assembly =>
+            try
             {
-                try
-                {
-                    Logging.Info($"Searching assembly {assembly.GetName().Name}");
+                var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-                    var functionTypes = assembly.GetTypes().Where(page => page.GetCustomAttribute<ComputerCustomScreenAttribute>() != null).ToArray();
-                    foreach (var type in functionTypes)
-                    {
-                        RegisterScreen(type);
-                    }
-                }
-                catch (Exception ex)
+                assemblies.Where(assembly => assembly != null && assembly.GetCustomAttribute<ComputerScannableAttribute>() != null).ForEach(assembly =>
                 {
-                    Logging.Fatal($"Exception thrown when searching assembly {assembly.GetName().Name}");
-                    Logging.Error(ex);
-                }
-            });
+                    try
+                    {
+                        Logging.Info($"Searching assembly {assembly.GetName().Name}");
+
+                        var types = assembly.GetTypes();
+                        types.Where(page => page.GetCustomAttribute<ComputerCustomScreenAttribute>() != null).ForEach(RegisterScreen);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Fatal($"Exception thrown when searching assembly {assembly.GetName().Name}");
+                        Logging.Error(ex);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Logging.Fatal("Exception thrown when performing initial assembly check");
+                Logging.Error(ex);
+            }
 
             ComputerScreen.UpdateScreenAction += delegate (ComputerScreen screen, string content)
             {
@@ -136,8 +141,14 @@ namespace GorillaComputer.Behaviours
                 }
             };
 
+            // Failure message
+
             FailureMessagePatch.CurrentFailureMessage.AddCallback(OnFailureRecieved);
             OnFailureRecieved(FailureMessagePatch.CurrentFailureMessage.value);
+
+            // Computer
+
+            SceneIndex.MonkeBlocks.AddCallbackOnSceneLoad(() => CheckScene(SceneManager.GetSceneByBuildIndex((int)SceneIndex.MonkeBlocks), null));
 
             ComputerKey.OnKeyClicked = PressButton;
 
@@ -258,39 +269,11 @@ namespace GorillaComputer.Behaviours
 
         public async void InitializeComputer(GorillaComputerTerminal terminal)
         {
-            var location = terminal.GetSceneIndex().ToString();
-
-            if (location == ((SceneIndex)0).ToString()) // Compare scene indexes, look for if we're in the main GT scene
-            {
-                // This method is what you would call in France "A FIASCO!"
-
-                var path = terminal.gameObject.GetPath().ToLower();
-
-                var zoneManager = ZoneManagement.instance;
-                var zones = (ZoneData[])AccessTools.Field(zoneManager.GetType(), "zones").GetValue(zoneManager);
-
-                var zone = zones.FirstOrDefault((ZoneData data) =>
-                {
-                    var rootObjects = data.rootGameObjects;
-                    if (rootObjects == null || rootObjects.Length == 0) return false;
-
-                    var matchingRoot = rootObjects.Select(root => root.name.ToLower()).Any(root => path.Contains(root));
-
-                    return matchingRoot;
-                });
-
-                if (zone != default)
-                {
-                    location = zone.zone.ToString();
-                }
-            }
-
-            if (location == GTZone.customMaps.ToString() || location == GTZone.arcade.ToString()) return; // Ignore for vstump computer
-
             Transform computerUI = terminal.transform.Find("ComputerUI");
             Transform computerTerminalScreen = computerUI ? (computerUI.Find("monitor") ?? terminal.monitorMesh.transform) : terminal.monitorMesh.transform;
 
             GameObject monitor = Instantiate(await AssetLoader.LoadAsset<GameObject>("Monitor"));
+            monitor.name = "GorillaComputer";
 
             Transform transform = monitor.transform;
             transform.SetParent(computerTerminalScreen);
@@ -298,8 +281,6 @@ namespace GorillaComputer.Behaviours
             transform.localEulerAngles = new Vector3(270f, 180f, 0f);
             transform.localScale = Vector3.one * 0.63f;
             transform.SetParent(terminal.transform);
-
-            monitor.name = $"GorillaComputer ({location})";
 
             Computer component = monitor.AddComponent<Computer>();
 
@@ -419,11 +400,50 @@ namespace GorillaComputer.Behaviours
 
         public static void QueueTerminal(GorillaComputerTerminal terminal)
         {
-            if (!UpgradedTerminals.Contains(terminal))
+            if (UpgradedTerminals.Contains(terminal)) return;
+            UpgradedTerminals.Add(terminal);
+
+            if (CheckScene(terminal.gameObject.scene, terminal))
             {
-                UpgradedTerminals.Add(terminal);
                 TerminalQueue.Enqueue(terminal);
             }
+        }
+
+        public static bool CheckScene(Scene scene, GorillaComputerTerminal terminal)
+        {
+            int buildIndex = scene.buildIndex;
+
+            if (!Enum.IsDefined(typeof(SceneIndex), buildIndex))
+            {
+                Logging.Info("Valid custom terminal");
+                return true;
+            }
+
+            var sceneIndex = (SceneIndex)buildIndex;
+
+            if (sceneIndex == SceneIndex.MonkeBlocks && !terminal)
+            {
+                terminal = scene.GetComponentInHierarchy<GorillaComputerTerminal>(true);
+                if (terminal)
+                {
+                    terminal.transform.parent.gameObject.SetActive(true);
+                    Logging.Info("Valid 'MonkeBlocks' terminal");
+                    return true;
+                }
+                return false;
+            }
+
+            var path = terminal.gameObject.GetPath();
+
+            if (sceneIndex == SceneIndex.GT && (path.Contains("MonkeBlocksRoomPersistent") || path.Contains("VirtualStump"))) // CHANGE LAST BIT FOR WHEN I GET A COMPUTER MODEL FOR VSTUMP!
+            {
+                terminal.transform.parent.gameObject.SetActive(false);
+                Logging.Info("Invalid duplicate terminal");
+                return false;
+            }
+
+            Logging.Info($"Valid '{sceneIndex}' terminal {terminal.name}");
+            return true;
         }
     }
 }

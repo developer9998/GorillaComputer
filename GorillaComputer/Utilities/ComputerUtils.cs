@@ -1,6 +1,5 @@
 ﻿using GorillaComputer.Extension;
 using GorillaComputer.Tools;
-using GorillaNetworking;
 using GorillaTagScripts;
 using GorillaTagScripts.ModIO;
 using HarmonyLib;
@@ -32,7 +31,7 @@ namespace GorillaComputer.Utilities
         /// <summary>
         /// Whether the local player is in a party
         /// </summary>
-        public static bool IsInParty => FriendshipGroupDetection.Instance.IsInParty;
+        public static bool InParty => FriendshipGroupDetection.Instance.IsInParty;
 
         /// <summary>
         /// Whether the party of the local player is in the friend join colliderr
@@ -49,6 +48,14 @@ namespace GorillaComputer.Utilities
         /// </summary>
         public static bool IsNamePermitted(string name) => Computer.CheckAutoBanListForName(name);
 
+        public static bool PlayerInVirtualStump => Computer.IsPlayerInVirtualStump();
+
+
+        public static event Action<bool> SetInVirtualStump;
+
+        public static void SetInVStump(bool inVStump) => SetInVirtualStump?.SafeInvoke(inVStump);
+
+
         /// <summary>
         /// Joins the room of the provided room code
         /// </summary>
@@ -56,7 +63,7 @@ namespace GorillaComputer.Utilities
         {
             if ((!InVirtualStump && roomCode == "") || (InVirtualStump && roomCode.Length == 1) || roomCode.Length > 10 || !IsNamePermitted(roomCode)) return;
 
-            if (IsInParty && !IsPartyWithinCollider)
+            if (InParty && !IsPartyWithinCollider)
             {
                 FriendshipGroupDetection.Instance.LeaveParty();
             }
@@ -66,7 +73,7 @@ namespace GorillaComputer.Utilities
                 CustomMapManager.UnloadMap(false);
             }
 
-            PhotonNetworkController.Instance.AttemptToJoinSpecificRoom(roomCode, IsInParty ? JoinType.JoinWithParty : JoinType.Solo);
+            GorillaNetworking.PhotonNetworkController.Instance.AttemptToJoinSpecificRoom(roomCode, InParty ? GorillaNetworking.JoinType.JoinWithParty : GorillaNetworking.JoinType.Solo);
         }
 
         /// <summary>
@@ -446,7 +453,15 @@ namespace GorillaComputer.Utilities
 
         public static bool IsCompetitiveAllowed => Computer.allowedInCompetitive;
 
-        public static string[] AllowedMaps => Computer.allowedMapsToJoin;
+        public static string[] AllowedMaps
+        {
+            get
+            {
+                var maps = Computer.allowedMapsToJoin;
+                if (maps.Length > 5) return maps.Take(5).ToArray();
+                return maps;
+            }
+        }
 
         public static string GroupMap => AllowedMaps.Length > 1 ? Computer.groupMapJoin : AllowedMaps.First().ToUpper();
 
@@ -555,7 +570,7 @@ namespace GorillaComputer.Utilities
         {
             get
             {
-                CreditsView creditsView = Computer.creditsView;
+                GorillaNetworking.CreditsView creditsView = Computer.creditsView;
                 return (int)creditsView.GetProperty("TotalPages").GetValue(creditsView);
             }
         }
@@ -564,13 +579,13 @@ namespace GorillaComputer.Utilities
         {
             get
             {
-                CreditsView creditsView = Computer.creditsView;
+                GorillaNetworking.CreditsView creditsView = Computer.creditsView;
 
                 return (int)creditsView.GetField("currentPage").GetValue(creditsView);
             }
             set
             {
-                CreditsView creditsView = Computer.creditsView;
+                GorillaNetworking.CreditsView creditsView = Computer.creditsView;
 
                 creditsView.GetField("currentPage").SetValue(creditsView, value < 0 ? CreditPageCount + value : value % CreditPageCount);
             }
@@ -578,7 +593,7 @@ namespace GorillaComputer.Utilities
 
         public static (string Title, List<string> Entries, bool Continue) CreditGetPage(int page)
         {
-            CreditsView creditsView = Computer.creditsView;
+            GorillaNetworking.CreditsView creditsView = Computer.creditsView;
 
             object pageEntries = creditsView.GetMethod("GetPageEntries").Invoke(creditsView, [page]);
 
@@ -601,11 +616,11 @@ namespace GorillaComputer.Utilities
                 {
                     {
                         "Player ID",
-                        PlayFabAuthenticator.instance.GetPlayFabPlayerId()
+                        GorillaNetworking.PlayFabAuthenticator.instance.GetPlayFabPlayerId()
                     },
                     {
                         "Platform",
-                        $"{(PlatformTagJoin)AccessTools.Field(typeof(PlayFabAuthenticator), "platform").GetValue(PlayFabAuthenticator.instance)} (Modded)"
+                        $"{(PlatformTagJoin)AccessTools.Field(typeof(GorillaNetworking.PlayFabAuthenticator), "platform").GetValue(GorillaNetworking.PlayFabAuthenticator.instance)} (Modded)"
                     },
                     {
                         "Build Version",

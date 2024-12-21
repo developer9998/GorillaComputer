@@ -53,7 +53,7 @@ namespace GorillaComputer.Screens
 
         public void AppendZoneInfo(StringBuilder str)
         {
-            str.AppendLine($"Selected Zone: '{ComputerUtils.GroupMap}'").AppendLine();
+            str.AppendLine($"Selection: '{ComputerUtils.GroupMap}'").AppendLine();
 
             if (ComputerUtils.AllowedMaps.Length > 1)
             {
@@ -74,7 +74,7 @@ namespace GorillaComputer.Screens
                     number--; // 1 = forest, 2 = cave, 3 = canyon, 4 = city, 5 = clouds
 
                     string map = ComputerUtils.AllowedMaps.ElementAtOrDefault(number) ?? null;
-                    if (string.IsNullOrEmpty(map)) return;
+                    if (string.IsNullOrEmpty(map)) return; // number doesn't align with map
 
                     ComputerUtils.SetGroupMap(map.ToUpper(), number);
 

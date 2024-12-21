@@ -24,9 +24,9 @@ namespace GorillaComputer.Screens
             StringBuilder str = new();
 
             Color colour = ComputerUtils.Colour;
-            str.Append("  Red: ").Append(Mathf.FloorToInt(colour.r * 9f)).Append(cursorLine == 0 ? " <" : " ").AppendLine();
-            str.Append("Green: ").Append(Mathf.FloorToInt(colour.g * 9f)).Append(cursorLine == 0 ? " <" : " ").AppendLine();
-            str.Append(" Blue: ").Append(Mathf.FloorToInt(colour.b * 9f)).Append(cursorLine == 0 ? " <" : " ").AppendLine();
+            str.Append("  Red: ").Append(Mathf.FloorToInt(colour.r * 9f)).Append(cursorLine == 0 ? " <" : " ").AppendLine().AppendLine();
+            str.Append("Green: ").Append(Mathf.FloorToInt(colour.g * 9f)).Append(cursorLine == 1 ? " <" : " ").AppendLine().AppendLine();
+            str.Append(" Blue: ").Append(Mathf.FloorToInt(colour.b * 9f)).Append(cursorLine == 2 ? " <" : " ").AppendLine().AppendLine();
 
             return str.ToString();
         }
