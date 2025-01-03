@@ -60,7 +60,7 @@ namespace GorillaComputer.Tools
             {
                 wallpaperTex = new Texture2D(1280, 720);
 
-                Color backgroundColour = new(0.53f, 0.53f, 0.6f);
+                Color backgroundColour = new Color32(57, 57, 67, 255);
 
                 wallpaperTex.SetPixels(Enumerable.Repeat(backgroundColour, wallpaperTex.width * wallpaperTex.height).ToArray());
 
@@ -77,7 +77,8 @@ namespace GorillaComputer.Tools
 
             if (fileRequest.result != UnityWebRequest.Result.Success)
             {
-                Logging.Error($"Wallpaper could not be loaded with result {fileRequest.result}");
+                Logging.Fatal("Wallpaper could not yield successful result");
+                Logging.Error(fileRequest.downloadHandler.error);
                 return null;
             }
 

@@ -12,17 +12,19 @@ using UnityEngine.UI;
 
 namespace GorillaComputer.Behaviours
 {
-    internal class Computer : GorillaSliceableSimple
+    internal class Computer : MonoBehaviour
     {
         // public bool UseStartupMenu = true;
 
         public Action OnPopRequest = null;
 
+        public Image Backdrop;
+
         public GameObject StartupMenu, MainMenu;
 
         public List<Text> FunctionLineText = [];
 
-        public Text Main, Summary, FunctionArrows, FunctionPage, ModTitleHeader, TimeHeader, StartupTimeHeader, StartupDateHeader, StartupLabel;
+        public Text Main, Summary, FunctionArrows, FunctionPage, StartupTimeHeader, StartupDateHeader, StartupLabel;
 
         private bool isSafeAccount;
 
@@ -35,12 +37,6 @@ namespace GorillaComputer.Behaviours
         {
             enabled = false;
             isSafeAccount = PlayFabAuthenticator.instance.GetSafety();
-        }
-
-        public override void OnEnable()
-        {
-            step = GorillaSlicerSimpleManager.UpdateStep.Update;
-            base.OnEnable();
         }
 
         public void OnDestroy()
@@ -69,24 +65,28 @@ namespace GorillaComputer.Behaviours
 
             // Computer menus
 
-            StartupMenu = transform.Find("Canvas/Startup Menu").gameObject;
+            Backdrop = transform.Find("Screen/Backdrop").GetComponent<Image>();
+
+            StartupMenu = Backdrop.transform.Find("Startup Menu").gameObject;
             StartupMenu.SetActive(false);
 
-            StartupTimeHeader = StartupMenu.transform.Find("TimeHeader").GetComponent<Text>();
-            StartupDateHeader = StartupMenu.transform.Find("DateHeader").GetComponent<Text>();
+            StartupTimeHeader = StartupMenu.transform.Find("Time").GetComponent<Text>();
+            StartupDateHeader = StartupMenu.transform.Find("Day").GetComponent<Text>();
             StartupLabel = StartupMenu.transform.Find("MainText").GetComponent<Text>();
 
-            MainMenu = transform.Find("Canvas/Main Menu").gameObject;
+            MainMenu = Backdrop.transform.Find("Main Menu").gameObject;
             MainMenu.SetActive(false);
 
             // Navigation area
 
-            FunctionArrows = MainMenu.transform.Find("FunctionArrow").GetComponent<Text>();
-            FunctionPage = MainMenu.transform.Find("FunctionPageText").GetComponent<Text>();
+            var navigation = MainMenu.transform.Find("Navigation");
+
+            FunctionArrows = navigation.Find("FunctionArrow").GetComponent<Text>();
+            FunctionPage = navigation.Find("FunctionPageText").GetComponent<Text>();
 
             FunctionLineText.Capacity = Constants.PageCapacity;
 
-            foreach (Transform child in MainMenu.transform)
+            foreach (Transform child in navigation)
             {
                 string name = child.name;
                 if (name.StartsWith("Function") && char.IsDigit(name.Last()))
@@ -98,14 +98,16 @@ namespace GorillaComputer.Behaviours
 
             // Client area
 
-            Main = MainMenu.transform.Find("MainText").GetComponent<Text>();
-            Summary = MainMenu.transform.Find("SummaryText").GetComponent<Text>();
+            var clientArea = MainMenu.transform.Find("Main");
+
+            Main = clientArea.Find("MainText").GetComponent<Text>();
+            Summary = clientArea.Find("SummaryText").GetComponent<Text>();
 
             // Title bar
 
-            TimeHeader = MainMenu.transform.Find("TimeHeader").GetComponent<Text>();
-            ModTitleHeader = MainMenu.transform.Find("ModTitleHeader").GetComponent<Text>();
-            ModTitleHeader.text = Constants.Name;
+            // TimeHeader = MainMenu.transform.Find("TimeHeader").GetComponent<Text>();
+            // ModTitleHeader = MainMenu.transform.Find("ModTitleHeader").GetComponent<Text>();
+            // ModTitleHeader.text = Constants.Name;
 
             if (!startup)
             {
@@ -120,7 +122,7 @@ namespace GorillaComputer.Behaviours
             enabled = true;
         }
 
-        public override void SliceUpdate()
+        public void Update()
         {
             if (GTAppState.isQuitting) return;
 
@@ -163,13 +165,7 @@ namespace GorillaComputer.Behaviours
                 UpdateScreen(null);
             }
 
-            UpdateMainHeading();
-        }
-
-        private void UpdateMainHeading()
-        {
-            DateTime now = DateTime.Now;
-            TimeHeader.text = now.ToString("hh:mm tt");
+            // UpdateMainHeading();
         }
 
         public void RevealStartup(bool startup)
@@ -188,7 +184,7 @@ namespace GorillaComputer.Behaviours
                 return;
             }
 
-            transform.Find("Canvas/Persistent Menu/Backdrop").GetComponent<Image>().sprite = sprite;
+            Backdrop.sprite = sprite;
         }
 
         public void ActivateMenuObjects(bool useStartupMenu)
@@ -275,7 +271,7 @@ namespace GorillaComputer.Behaviours
                 text.GetComponent<Outline>().effectColor = new Color(1f, 1f, 1f, 0.25f);
 
                 FunctionArrows.enabled = true;
-                FunctionArrows.transform.localPosition = new Vector3(FunctionArrows.transform.localPosition.x, text.transform.localPosition.y + 0.55f, 0f);
+                FunctionArrows.transform.localPosition = new Vector3(FunctionArrows.transform.localPosition.x, text.transform.localPosition.y + 0.280f, 0f);
             }
 
             FunctionPage.text = $"Page {Mathf.FloorToInt(Singleton<Main>.Instance.ActiveScreenIndex.Value / (float)Constants.PageCapacity) + 1}/{Mathf.CeilToInt(Singleton<Main>.Instance.ScreenRegistry.Count / (float)Constants.PageCapacity)}";

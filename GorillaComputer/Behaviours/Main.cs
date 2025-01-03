@@ -6,7 +6,6 @@ using GorillaComputer.Tools;
 using GorillaComputer.Utilities;
 using GorillaExtensions;
 using GorillaNetworking;
-using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -435,7 +434,7 @@ namespace GorillaComputer.Behaviours
 
             var path = terminal.gameObject.GetPath();
 
-            if (sceneIndex == SceneIndex.GT && (path.Contains("MonkeBlocksRoomPersistent") || path.Contains("VirtualStump"))) // CHANGE LAST BIT FOR WHEN I GET A COMPUTER MODEL FOR VSTUMP!
+            if (sceneIndex == SceneIndex.GT && path.Contains("MonkeBlocksRoomPersistent"))
             {
                 terminal.transform.parent.gameObject.SetActive(false);
                 Logging.Info("Invalid duplicate terminal");

@@ -447,7 +447,7 @@ namespace GorillaComputer.Utilities
         /// </summary>
         public static void RequestTroopPopulation(bool forceUpdate = true)
         {
-            Computer.GetField("troopPopulationCheckCooldown").SetValue(Computer, 0.5f);
+            Computer.GetField("troopPopulationCheckCooldown").SetValue(Computer, 1f);
             Computer.GetMethod("RequestTroopPopulation").Invoke(Computer, [forceUpdate]);
         }
 
@@ -566,12 +566,13 @@ namespace GorillaComputer.Utilities
             }
         }
 
+        public static GorillaNetworking.CreditsView CreditsView => Computer.creditsView;
+
         public static int CreditPageCount
         {
             get
             {
-                GorillaNetworking.CreditsView creditsView = Computer.creditsView;
-                return (int)creditsView.GetProperty("TotalPages").GetValue(creditsView);
+                return (int)CreditsView.GetProperty("TotalPages").GetValue(CreditsView);
             }
         }
 
@@ -579,23 +580,17 @@ namespace GorillaComputer.Utilities
         {
             get
             {
-                GorillaNetworking.CreditsView creditsView = Computer.creditsView;
-
-                return (int)creditsView.GetField("currentPage").GetValue(creditsView);
+                return (int)CreditsView.GetField("currentPage").GetValue(CreditsView);
             }
             set
             {
-                GorillaNetworking.CreditsView creditsView = Computer.creditsView;
-
-                creditsView.GetField("currentPage").SetValue(creditsView, value < 0 ? CreditPageCount + value : value % CreditPageCount);
+                CreditsView.GetField("currentPage").SetValue(CreditsView, value < 0 ? CreditPageCount + value : value % CreditPageCount);
             }
         }
 
         public static (string Title, List<string> Entries, bool Continue) CreditGetPage(int page)
         {
-            GorillaNetworking.CreditsView creditsView = Computer.creditsView;
-
-            object pageEntries = creditsView.GetMethod("GetPageEntries").Invoke(creditsView, [page]);
+            object pageEntries = CreditsView.GetMethod("GetPageEntries").Invoke(CreditsView, [page]);
 
             object currentSection = pageEntries.GetField("Item1").GetValue(pageEntries);
 
@@ -603,7 +598,7 @@ namespace GorillaComputer.Utilities
 
             string title = (string)currentSection.GetProperty("Title").GetValue(currentSection);
 
-            IEnumerable<string> entries = (IEnumerable<string>)creditsView.GetMethod("PageOfSection").Invoke(creditsView, [currentSection, currentSubPage]);
+            IEnumerable<string> entries = (IEnumerable<string>)CreditsView.GetMethod("PageOfSection").Invoke(CreditsView, [currentSection, currentSubPage]);
 
             return (title, entries.ToList(), currentSubPage > 0);
         }
