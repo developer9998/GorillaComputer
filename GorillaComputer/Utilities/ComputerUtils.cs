@@ -70,7 +70,7 @@ namespace GorillaComputer.Utilities
 
             if (InVirtualStump)
             {
-                CustomMapManager.UnloadMap(false);
+                CustomMapManager.UnloadMod(false);
             }
 
             GorillaNetworking.PhotonNetworkController.Instance.AttemptToJoinSpecificRoom(roomCode, InParty ? GorillaNetworking.JoinType.JoinWithParty : GorillaNetworking.JoinType.Solo);
