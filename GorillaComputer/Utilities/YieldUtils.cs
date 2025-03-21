@@ -1,4 +1,5 @@
-﻿using GorillaLocomotion;
+﻿using GorillaComputer.Behaviours;
+using GorillaLocomotion;
 using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -11,14 +12,14 @@ namespace GorillaComputer.Utilities
         public static async Task YieldWebRequestAsync(UnityWebRequest webRequest)
         {
             var completionSource = new TaskCompletionSource<UnityWebRequest>();
-            Player.Instance.StartCoroutine(AwaitWebRequestCoroutine(webRequest, completionSource));
+            ((MonoBehaviour)(Main.HasInstance ? Main.Instance : GTPlayer.Instance)).StartCoroutine(AwaitWebRequestCoroutine(webRequest, completionSource));
             await completionSource.Task;
         }
 
         public static async Task YieldInstructionAsync(YieldInstruction instruction)
         {
             var completionSource = new TaskCompletionSource<YieldInstruction>();
-            Player.Instance.StartCoroutine(AwaitInstructionCorouutine(instruction, completionSource));
+            ((MonoBehaviour)(Main.HasInstance ? Main.Instance : GTPlayer.Instance)).StartCoroutine(AwaitInstructionCorouutine(instruction, completionSource));
             await completionSource.Task;
         }
 

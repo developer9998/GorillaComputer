@@ -6,6 +6,7 @@ using GorillaComputer.Tools;
 using GorillaComputer.Utilities;
 using GorillaExtensions;
 using GorillaNetworking;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -153,6 +154,7 @@ namespace GorillaComputer.Behaviours
 
             enabled = true;
             ComputerUtils.Computer.enabled = false;
+            Logging.Info($"Computer init: {ComputerUtils.Computer.initialized}");
         }
 
         public void Update()
