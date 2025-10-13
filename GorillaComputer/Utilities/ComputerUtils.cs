@@ -117,7 +117,7 @@ namespace GorillaComputer.Utilities
                 if (value == "" || value.Length > 12 || !IsNamePermitted(value)) return;
 
                 NetworkSystem.Instance.SetMyNickName(value);
-                ModIOMapsTerminal.RequestDriverNickNameRefresh();
+                CustomMapsTerminal.RequestDriverNickNameRefresh();
 
                 AccessTools.Method(Computer.GetType(), "SetNameTagText").Invoke(Computer, [value]);
 
